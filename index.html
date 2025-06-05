@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi App con Firebase</title>
+</head>
+<body>
+  <h1>Registro de Usuarios</h1>
+
+  <form id="formulario">
+    <label for="nombre">Nombre:</label><br>
+    <input type="text" id="nombre" required><br><br>
+
+    <label for="correo">Correo:</label><br>
+    <input type="email" id="correo" required><br><br>
+
+    <button type="submit">Guardar</button>
+  </form>
+
+  <p id="mensaje"></p>
+
+  <h2>Lista de Usuarios</h2>
+  <table border="1" id="tablaUsuarios">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Correo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Aquí se insertarán los usuarios -->
+    </tbody>
+  </table>
+
+  <!-- Firebase scripts -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBMbS03YXelxtImddYi954A2CIT_IRlnUE",
+      authDomain: "programa-27166.firebaseapp.com",
+      projectId: "programa-27166",
+      storageBucket: "programa-27166.appspot.com",
+      messagingSenderId: "672184644976",
+      appId: "1:672184644976:web:f4eb4b9ab4e49cc4138bb5",
+      measurementId: "G-5ZG0TRNC2E"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const formulario = document.getElementById('formulario');
+    const mensaje = document.getElementById('mensaje');
+    const tablaUsuarios = document.getElementById('tablaUsuarios').querySelector('tbody');
+
+    // Guardar usuario en Firestore
+    formulario.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nombre = document.getElementById('nombre').value.trim();
+      const correo = document.getElementById('correo').value.trim();
+
+      if (!nombre || !correo) {
+        mensaje.textContent = "Por favor, rellena ambos campos.";
+        return;
+      }
+
+      try {
+        const docRef = await addDoc(collection(db, "usuarios"), {
+          nombre,
+          correo,
+          creado: new Date()
+        });
+        mensaje.textContent = "✅ Usuario guardado con ID: " + docRef.id;
+        formulario.reset();
+      } catch (error) {
+        mensaje.textContent = "❌ Error al guardar: " + error.message;
+      }
+    });
+
+    // Mostrar usuarios en tiempo real
+    onSnapshot(collection(db, "usuarios"), (snapshot) => {
+      tablaUsuarios.innerHTML = ""; // Limpiar tabla
+      snapshot.forEach((doc) => {
+        const usuario = doc.data();
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+          <td>${usuario.nombre}</td>
+          <td>${usuario.correo}</td>
+        `;
+        tablaUsuarios.appendChild(fila);
+      });
+    });
+  </script>
+</body>
+</html>
